@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>NOYX</title>
+
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  body{
+    font-family: Arial;
+    padding:20px;
+  background-image: url("NOYX.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  }
+
+  h1 {
+    font-family: 'League Spartan', sans-serif;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .topo{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+
+  .botoes{
+    display:flex;
+    gap:10px;
+  }
+
+  button{
+    padding:6px 12px;
+    cursor:pointer;
+  }
+
+  table{
+    border-collapse: collapse;
+    margin-top:20px;
+    width:100%;
+  }
+
+  td, th{
+    border:1px solid #000;
+    padding:8px;
+  }
+
+  input{
+    width:100%;
+    border:none;
+    outline:none;
+  }
+
+  h3{
+    margin-top:30px;
+  }
+
+
+  #conteudo{
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .fade-out{
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  .fade-in{
+    opacity: 1;
+    transform: translateX(0);
+  }
+</style>
+</head>
+
+<body>
+
+<div class="topo">
+  <h1>NOYX zen</h1>
+
+  <div class="botoes">
+    <button onclick="voltar()">⬅</button>
+    <button onclick="avancar()">➡</button>
+  </div>
+</div>
+
+<div id="conteudo">
+
+<h3 id="paginaTitulo"></h3>
+
+<!-- TABELA 1 -->
+<h3 contenteditable="true" id="titulo1"></h3>
+<table>
+  <thead>
+    <tr>
+      <th style="width:60px;">Nº</th>
+      <th style="width:120px;">Valor</th>
+      <th>Nome</th>
+    </tr>
+  </thead>
+  <tbody id="corpoTabela"></tbody>
+</table>
+
+<!-- TABELA 2 -->
+<h3 contenteditable="true" id="titulo2"></h3>
+<table>
+  <thead>
+    <tr>
+      <th style="width:60px;">Nº</th>
+      <th style="width:120px;">Valor</th>
+      <th>Nome</th>
+    </tr>
+  </thead>
+  <tbody id="corpoTabela2"></tbody>
+</table>
+
+<!-- TABELA 3 -->
+<h3 contenteditable="true" id="titulo3"></h3>
+<table>
+  <thead>
+    <tr>
+      <th style="width:60px;">Nº</th>
+      <th style="width:120px;">Valor</th>
+      <th>Nome</th>
+    </tr>
+  </thead>
+  <tbody id="corpoTabela3"></tbody>
+</table>
+
+<!-- TABELA 4 -->
+<h3 contenteditable="true" id="titulo4"></h3>
+<table>
+  <thead>
+    <tr>
+      <th style="width:60px;">Nº</th>
+      <th style="width:120px;">Valor</th>
+      <th>Nome</th>
+    </tr>
+  </thead>
+  <tbody id="corpoTabela4"></tbody>
+</table>
+
+</div>
+
+<script>
+let paginaAtual = 0;
+const totalPaginas = 3;
+
+// criar tabelas
+function criarTabela(id){
+  const key = "pagina_" + paginaAtual + "_" + id;
+  const dados = JSON.parse(localStorage.getItem(key)) || [];
+
+  const corpo = document.getElementById(id);
+  corpo.innerHTML = "";
+
+  for(let i=0; i<5; i++){
+    const tr = document.createElement("tr");
+
+    const num = dados[i]?.num || "";
+    const valor = dados[i]?.valor || "";
+    const nome = dados[i]?.nome || "";
+
+    tr.innerHTML = `
+      <td><input value="${num}" onchange="salvar('${id}', ${i}, 'num', this.value)"></td>
+      <td><input value="${valor}" onchange="salvar('${id}', ${i}, 'valor', this.value)"></td>
+      <td><input value="${nome}" onchange="salvar('${id}', ${i}, 'nome', this.value)"></td>
+    `;
+
+    corpo.appendChild(tr);
+  }
+}
+
+// carregar tudo
+function carregarTabela(){
+  criarTabela("corpoTabela");
+  criarTabela("corpoTabela2");
+  criarTabela("corpoTabela3");
+  criarTabela("corpoTabela4");
+
+  document.getElementById("paginaTitulo").innerText = 
+    "Página " + (paginaAtual + 1);
+
+  carregarTitulos();
+}
+
+// salvar dados
+function salvar(id, linha, campo, valor){
+  const key = "pagina_" + paginaAtual + "_" + id;
+  let dados = JSON.parse(localStorage.getItem(key)) || [];
+
+  if(!dados[linha]) dados[linha] = {};
+  dados[linha][campo] = valor;
+
+  localStorage.setItem(key, JSON.stringify(dados));
+}
+
+// títulos
+function salvarTitulo(id, texto){
+  localStorage.setItem("pagina_" + paginaAtual + "_titulo_" + id, texto);
+}
+
+function carregarTitulos(){
+  for(let i=1; i<=4; i++){
+    const t = localStorage.getItem("pagina_" + paginaAtual + "_titulo_titulo" + i);
+    document.getElementById("titulo"+i).innerText = t || ("Planilha " + i);
+  }
+}
+
+// detectar edição dos títulos
+document.addEventListener("input", function(e){
+  if(e.target.id && e.target.id.startsWith("titulo")){
+    salvarTitulo(e.target.id, e.target.innerText);
+  }
+});
+
+// animação + troca
+function trocarPagina(direcao){
+  const conteudo = document.getElementById("conteudo");
+
+  conteudo.classList.add("fade-out");
+
+  setTimeout(() => {
+    paginaAtual += direcao;
+
+    carregarTabela();
+
+    conteudo.classList.remove("fade-out");
+    conteudo.classList.add("fade-in");
+
+    setTimeout(()=>{
+      conteudo.classList.remove("fade-in");
+    }, 300);
+
+  }, 300);
+}
+
+function avancar(){
+  if(paginaAtual < totalPaginas - 1){
+    trocarPagina(1);
+  }
+}
+
+function voltar(){
+  if(paginaAtual > 0){
+    trocarPagina(-1);
+  }
+}
+
+// iniciar
+carregarTabela();
+</script>
+
+</body>
+</html>
